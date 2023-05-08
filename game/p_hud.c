@@ -324,8 +324,8 @@ void HelpComputer (edict_t *ent)
 		"xv 50 yv 172 string2 \"%3i/%3i     %i/%i       %i/%i\" ", 
 		sk,
 		level.level_name,
-		game.helpmessage1,
-		game.helpmessage2,
+		"Unlock Achivements by defeating \n enemies, finding secrets, and \ninflicting status effects",
+		"Choose a starting class to gain \n special weapons, and inflict \npowerful debuffs on enemies to \ngain the edge in battle",
 		level.killed_monsters, level.total_monsters, 
 		level.found_goals, level.total_goals,
 		level.found_secrets, level.total_secrets);

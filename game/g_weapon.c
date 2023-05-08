@@ -563,14 +563,6 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	}
 }
 
-void rocket_think(edict_t* self) {
-
-	vec3_t aimdir = { 0 };
-	aimdir[0] = crandom();
-	aimdir[1] = crandom();
-	aimdir[2] = crandom();
-	fire_rail(self->owner, self->s.origin, aimdir, 100, 200);
-}
 
 /*
 =================
@@ -709,8 +701,8 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	rocket->s.modelindex = gi.modelindex ("models/objects/rocket/tris.md2");
 	rocket->owner = self;
 	rocket->touch = rocket_touch;
-	rocket->nextthink = level.time + 2;
-	rocket->think = rocket_think;
+	rocket->nextthink = level.time + 8000/speed;
+	rocket->think = G_FreeEdict;
 	rocket->dmg = damage;
 	rocket->radius_dmg = radius_damage;
 	rocket->dmg_radius = damage_radius;
@@ -721,7 +713,6 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 		check_dodge (self, rocket->s.origin, dir, speed);
 
 	gi.linkentity (rocket);
-	rocket_think(rocket);
 }
 
 

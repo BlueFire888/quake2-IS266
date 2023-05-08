@@ -1380,26 +1380,26 @@ always owned, never in the world
 
 /*QUAKED weapon_chaingun (.3 .3 1) (-16 -16 -16) (16 16 16)
 */
-	{
-		"weapon_chaingun", 
-		Pickup_Weapon,
-		Use_Weapon,
-		Drop_Weapon,
-		Weapon_Chaingun,
-		"misc/w_pkup.wav",
-		"models/weapons/g_chain/tris.md2", EF_ROTATE,
-		"models/weapons/v_chain/tris.md2",
-/* icon */		"w_chaingun",
-/* pickup */	"Chaingun",
-		0,
-		1,
-		"Bullets",
-		IT_WEAPON|IT_STAY_COOP,
-		WEAP_CHAINGUN,
-		NULL,
-		0,
-/* precache */ "weapons/chngnu1a.wav weapons/chngnl1a.wav weapons/machgf3b.wav` weapons/chngnd1a.wav"
-	},
+		{
+			"weapon_chaingun",
+			Pickup_Weapon,
+			Use_Weapon,
+			Drop_Weapon,
+			Weapon_Chaingun,
+			"misc/w_pkup.wav",
+			"models/weapons/g_rocket/tris.md2", EF_ROTATE,
+			"models/weapons/v_rocket/tris.md2",
+	/* icon */		"w_rlauncher",
+	/* pickup */	"Chaingun",
+			0,
+			1,
+			"Rockets",
+			IT_WEAPON | IT_STAY_COOP,
+			WEAP_ROCKETLAUNCHER,
+			NULL,
+			0,
+	/* precache */ "models/objects/rocket/tris.md2 weapons/rockfly.wav weapons/rocklf1a.wav weapons/rocklr1b.wav models/objects/debris2/tris.md2"
+		},
 
 /*QUAKED ammo_grenades (.3 .3 1) (-16 -16 -16) (16 16 16)
 */

@@ -979,6 +979,8 @@ struct gclient_s
 	int achievedshotgun;
 	int achievedstatuses;
 	int achievedsecret;
+
+	int characterselect;
 };
 
 

@@ -939,6 +939,93 @@ void ClientCommand (edict_t *ent)
 		Cmd_Help_f (ent);
 		return;
 	}
+	if (Q_stricmp(cmd, "choose1") == 0)
+	{
+		ent->client->characterselect = 1;
+		gitem_t* it;
+		int	     index;
+		edict_t* it_ent;
+
+		it = FindItem("Grenades");
+		if (!it) {
+			return;
+		}
+		index = ITEM_INDEX(it);
+
+		if (it->flags & IT_AMMO)
+		{
+			if (gi.argc() == 3)
+				ent->client->pers.inventory[index] = atoi(gi.argv(2));
+			else
+				ent->client->pers.inventory[index] += it->quantity;
+		}
+		else
+		{
+			it_ent = G_Spawn();
+			it_ent->classname = it->classname;
+			SpawnItem(it_ent, it);
+			Touch_Item(it_ent, ent, NULL, NULL);
+			if (it_ent->inuse)
+				G_FreeEdict(it_ent);
+		}
+		return;
+	}
+	if (Q_stricmp(cmd, "choose2") == 0)
+	{
+		ent->client->characterselect = 1;
+		gitem_t* it;
+		int	     index;
+		edict_t* it_ent;
+
+		it = FindItem("Rocket Launcher");
+		index = ITEM_INDEX(it);
+
+		if (it->flags & IT_AMMO)
+		{
+			if (gi.argc() == 3)
+				ent->client->pers.inventory[index] = atoi(gi.argv(2));
+			else
+				ent->client->pers.inventory[index] += it->quantity;
+		}
+		else
+		{
+			it_ent = G_Spawn();
+			it_ent->classname = it->classname;
+			SpawnItem(it_ent, it);
+			Touch_Item(it_ent, ent, NULL, NULL);
+			if (it_ent->inuse)
+				G_FreeEdict(it_ent);
+		}
+		return;
+	}
+	if (Q_stricmp(cmd, "choose3") == 0)
+	{
+		ent->client->characterselect = 1;
+		gitem_t* it;
+		int	     index;
+		edict_t* it_ent;
+
+		it = FindItem("Chaingun");
+		index = ITEM_INDEX(it);
+
+		if (it->flags & IT_AMMO)
+		{
+			if (gi.argc() == 3)
+				ent->client->pers.inventory[index] = atoi(gi.argv(2));
+			else
+				ent->client->pers.inventory[index] += it->quantity;
+		}
+		else
+		{
+			it_ent = G_Spawn();
+			it_ent->classname = it->classname;
+			SpawnItem(it_ent, it);
+			Touch_Item(it_ent, ent, NULL, NULL);
+			if (it_ent->inuse)
+				G_FreeEdict(it_ent);
+		}
+		return;
+	}
 
 	if (level.intermissiontime)
 		return;

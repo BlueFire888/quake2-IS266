@@ -758,6 +758,7 @@ void Status_check(edict_t* self) {
 
 	if ((self->bleedstacks > 0) && (level.time > self->bleedtimer)) {
 
+		gi.bprintf(PRINT_HIGH, "Bleed Damage: %d\n ", 2 * self->bleedstacks);
 		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, 2 * self->bleedstacks, 0, DAMAGE_NO_ARMOR, 0);
 		(self->bleedstacks)--;
 		self->bleedtimer = level.time + 2.0;
@@ -770,7 +771,7 @@ void Status_check(edict_t* self) {
 		else
 			pdamage = (int)pdamage_float;
 		
-		gi.centerprintf(self->enemy, "Posion stacks: %d", self->poisonstacks);
+		gi.bprintf(PRINT_HIGH, "Poison Damage: %d \n ", pdamage);
 		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, pdamage , 0, DAMAGE_NO_ARMOR, 0);
 		(self->poisonstacks)--;
 		self->poisontimer = level.time + 0.5;
@@ -779,11 +780,11 @@ void Status_check(edict_t* self) {
 
 		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, 3, 0, DAMAGE_NO_ARMOR, 0);
 		(self->burnstacks)--;
-		gi.bprintf(PRINT_HIGH, "Ow \n");
+		gi.bprintf(PRINT_HIGH, "Burn Damage: 3\n ");
 		self->burntimer = level.time + 1.0;
 	}
 	if ((self->collapsestacks > 0) && (level.time > self->collapsetimer)) {
-		gi.bprintf(PRINT_MEDIUM, "Ow\n");
+		gi.bprintf(PRINT_HIGH, "Collapse Damage: %d\n", 5 * self->collapsestacks);
 		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, 5 * self->collapsestacks, 0, DAMAGE_NO_ARMOR, 0);
 		self->collapsestacks = 0;
 

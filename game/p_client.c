@@ -615,6 +615,7 @@ void InitClientPersistant (gclient_t *client)
 	client->pers.inventory[client->pers.selected_item] = 1;
 
 	client->pers.weapon = item;
+	
 
 	client->pers.health			= 100;
 	client->pers.max_health		= 100;
@@ -636,12 +637,13 @@ void InitClientPersistant (gclient_t *client)
 
 	client->statuscounter = 0;
 
-	client->achievedkill;
-	client->achievedmultikill;
-	client->achievedshotgun;
-	client->achievedstatuses;
-	client->achievedsecret;
+	client->achievedkill = 0;
+	client->achievedmultikill = 0;
+	client->achievedshotgun = 0;
+	client->achievedstatuses = 0;
+	client->achievedsecret = 0;
 
+	client->characterselect = 0;
 }
 
 
@@ -1714,6 +1716,12 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	client->buttons = ucmd->buttons;
 	client->latched_buttons |= client->buttons & ~client->oldbuttons;
 
+	if (client->characterselect < 1) {
+		gi.centerprintf(ent, "Please select you character: \n %s \n %s \n %s",
+			"Commando  Artificer   Acrid",
+			"    Grenades   Firbolt   Poison Spit  ",
+			"  J        K        L ");
+	}
 	check_achievements(ent);
 
 	// save light level the player is standing on for
