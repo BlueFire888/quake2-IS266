@@ -563,7 +563,15 @@ void weapon_grenade_fire (edict_t *ent, qboolean held)
 
 	timer = ent->client->grenade_time - level.time;
 	speed = GRENADE_MINSPEED + (GRENADE_TIMER - timer) * ((GRENADE_MAXSPEED - GRENADE_MINSPEED) / GRENADE_TIMER);
-	fire_grenade2 (ent, start, forward, damage, speed, timer, radius, held);
+	for (int i = 0; i < 5; i++) {
+		vec3_t shift;
+		vec3_t new_forward;
+		shift[0] = (crandom() * 0.35);
+		shift[1] = (crandom() * 0.35);
+		shift[2] = (crandom() * 0.35);
+		VectorAdd(shift, forward, new_forward);
+		fire_grenade2(ent, start, new_forward, damage, speed, timer, radius, held);
+	}
 
 	if (! ( (int)dmflags->value & DF_INFINITE_AMMO ) )
 		ent->client->pers.inventory[ent->client->ammo_index]--;
@@ -594,6 +602,7 @@ void weapon_grenade_fire (edict_t *ent, qboolean held)
 
 void Weapon_Grenade (edict_t *ent)
 {
+	int i = 0;
 	if ((ent->client->newweapon) && (ent->client->weaponstate == WEAPON_READY))
 	{
 		ChangeWeapon (ent);
@@ -662,8 +671,13 @@ void Weapon_Grenade (edict_t *ent)
 				ent->client->grenade_blew_up = true;
 			}
 
-			if (ent->client->buttons & BUTTON_ATTACK)
-				return;
+			while (ent->client->buttons & BUTTON_ATTACK) {
+				i++;
+				gi.centerprintf(ent, "%s%d", "I am here: ", i);
+				if(i >= 6){
+					return;
+				}
+			}
 
 			if (ent->client->grenade_blew_up)
 			{
@@ -725,7 +739,15 @@ void weapon_grenadelauncher_fire (edict_t *ent)
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_grenade (ent, start, forward, damage, 600, 2.5, radius);
+	for (int i = 0; i < 5; i++) {
+		vec3_t shift;
+		vec3_t new_forward;
+		shift[0] = (crandom() * 0.35);
+		shift[1] = (crandom() * 0.35);
+		shift[2] = (crandom() * 0.35);
+		VectorAdd(shift, forward, new_forward);
+		fire_grenade(ent, start, new_forward, damage, 600, 1.0, radius);
+	}
 
 	gi.WriteByte (svc_muzzleflash);
 	gi.WriteShort (ent-g_edicts);
@@ -780,7 +802,7 @@ void Weapon_RocketLauncher_Fire (edict_t *ent)
 
 	VectorSet(offset, 8, 8, ent->viewheight-8);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
-	fire_rocket (ent, start, forward, damage, 650, damage_radius, radius_damage);
+	fire_rocket (ent, start, forward, damage, 100, damage_radius, radius_damage);
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -818,6 +840,8 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 	vec3_t	forward, right;
 	vec3_t	start;
 	vec3_t	offset;
+	vec3_t  secondblast = { -20,0,0 };
+	vec3_t  aim;
 
 	if (is_quad)
 		damage *= 4;
@@ -826,10 +850,44 @@ void Blaster_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, in
 	VectorAdd (offset, g_offset, offset);
 	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
 
+
 	VectorScale (forward, -2, ent->client->kick_origin);
 	ent->client->kick_angles[0] = -1;
 
-	fire_blaster (ent, start, forward, damage, 1000, effect, hyper);
+	if (hyper) {
+		trace_t tr;
+		vec3_t point;
+		//gi.centerprintf(ent, vtos(ent->s.origin 
+		gi.centerprintf(ent, "View Angle: % s", vtos(ent->client->v_angle));
+		VectorAdd(ent->s.origin, ent->client->v_angle, point);
+
+		tr = gi.trace(ent->s.origin, NULL, NULL, point, ent, MASK_SHOT);
+		if (tr.fraction < 1)
+		{
+			if (!tr.ent) {
+				gi.centerprintf(ent, "L");
+			}
+			else {
+				ent->enemy = tr.ent;
+			}
+		}
+		else {
+			ent->enemy = NULL;
+		}
+		if (!ent->enemy) {
+			gi.centerprintf(ent, "Nothing to hit");
+			fire_rocket(ent, start, forward, damage, 700, effect, hyper);
+		} else {
+
+			fire_hit(ent, ent->client->v_angle, 3000, 300);
+			
+		}
+	}
+	else {
+		fire_blaster(ent, start, forward, 1, 700, effect, hyper);
+		VectorAdd(start, secondblast, start);
+		fire_blaster(ent, start, forward, 1, 700, effect, hyper);
+	}
 
 	// send muzzle flash
 	gi.WriteByte (svc_muzzleflash);
@@ -1315,7 +1373,7 @@ void weapon_railgun_fire (edict_t *ent)
 	else
 	{
 		damage = 150;
-		kick = 250;
+		kick = 2500;
 	}
 
 	if (is_quad)
@@ -1350,7 +1408,7 @@ void weapon_railgun_fire (edict_t *ent)
 void Weapon_Railgun (edict_t *ent)
 {
 	static int	pause_frames[]	= {56, 0};
-	static int	fire_frames[]	= {4, 0};
+	static int	fire_frames[]	= {4, 10 ,0};
 
 	Weapon_Generic (ent, 3, 18, 56, 61, pause_frames, fire_frames, weapon_railgun_fire);
 }

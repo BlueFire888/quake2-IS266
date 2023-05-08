@@ -108,6 +108,7 @@ static void M_FliesOff (edict_t *self)
 {
 	self->s.effects &= ~EF_FLIES;
 	self->s.sound = 0;
+	Status_check(self);
 }
 
 static void M_FliesOn (edict_t *self)
@@ -118,6 +119,7 @@ static void M_FliesOn (edict_t *self)
 	self->s.sound = gi.soundindex ("infantry/inflies1.wav");
 	self->think = M_FliesOff;
 	self->nextthink = level.time + 60;
+	Status_check(self);
 }
 
 void M_FlyCheck (edict_t *self)
@@ -427,6 +429,7 @@ void monster_think (edict_t *self)
 	M_CatagorizePosition (self);
 	M_WorldEffects (self);
 	M_SetEffects (self);
+	Status_check(self);
 }
 
 
@@ -478,6 +481,7 @@ void monster_triggered_spawn (edict_t *self)
 	{
 		self->enemy = NULL;
 	}
+	Status_check(self);
 }
 
 void monster_triggered_spawn_use (edict_t *self, edict_t *other, edict_t *activator)
@@ -682,11 +686,17 @@ void walkmonster_start_go (edict_t *self)
 	if (!self->yaw_speed)
 		self->yaw_speed = 20;
 	self->viewheight = 25;
+	self->bleedstacks = 0;
+	self->poisonstacks = 0;
+	self->burnstacks = 0;
+	self->collapsestacks = 0;
+	self->slowstacks = 0;
 
 	monster_start_go (self);
 
 	if (self->spawnflags & 2)
 		monster_triggered_start (self);
+	Status_check(self);
 }
 
 void walkmonster_start (edict_t *self)
@@ -709,6 +719,7 @@ void flymonster_start_go (edict_t *self)
 
 	if (self->spawnflags & 2)
 		monster_triggered_start (self);
+	Status_check(self);
 }
 
 
@@ -730,6 +741,7 @@ void swimmonster_start_go (edict_t *self)
 
 	if (self->spawnflags & 2)
 		monster_triggered_start (self);
+	Status_check(self);
 }
 
 void swimmonster_start (edict_t *self)
@@ -737,4 +749,47 @@ void swimmonster_start (edict_t *self)
 	self->flags |= FL_SWIM;
 	self->think = swimmonster_start_go;
 	monster_start (self);
+}
+
+void Status_check(edict_t* self) {
+
+	if (!self->enemy) 
+		return;
+
+	if ((self->bleedstacks > 0) && (level.time > self->bleedtimer)) {
+
+		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, 2 * self->bleedstacks, 0, DAMAGE_NO_ARMOR, 0);
+		(self->bleedstacks)--;
+		self->bleedtimer = level.time + 2.0;
+	}
+	if ((self->poisonstacks > 0) && (level.time > self->poisontimer)) {
+		double pdamage_float =  self->health * 0.2;
+		int pdamage;
+		if (pdamage_float < 1)
+			pdamage = 1;
+		else
+			pdamage = (int)pdamage_float;
+		
+		gi.centerprintf(self->enemy, "Posion stacks: %d", self->poisonstacks);
+		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, pdamage , 0, DAMAGE_NO_ARMOR, 0);
+		(self->poisonstacks)--;
+		self->poisontimer = level.time + 0.5;
+	}
+	if ((self->burnstacks > 0) && (level.time > self->burntimer)) {
+
+		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, 3, 0, DAMAGE_NO_ARMOR, 0);
+		(self->burnstacks)--;
+		gi.bprintf(PRINT_HIGH, "Ow \n");
+		self->burntimer = level.time + 1.0;
+	}
+	if ((self->collapsestacks > 0) && (level.time > self->collapsetimer)) {
+		gi.bprintf(PRINT_MEDIUM, "Ow\n");
+		T_Damage(self, world, world, vec3_origin, self->s.origin, vec3_origin, 5 * self->collapsestacks, 0, DAMAGE_NO_ARMOR, 0);
+		self->collapsestacks = 0;
+
+	}
+	if ((self->slowstacks > 0) && (level.time > self->slowtimer)) {
+		(self->slowstacks)--;
+		VectorSet(self->movedir, 0, 0, 0);
+	}
 }

@@ -694,6 +694,9 @@ qboolean M_CheckAttack (edict_t *self);
 void M_FlyCheck (edict_t *self);
 void M_CheckGround (edict_t *ent);
 
+// MJ start
+void Status_check(edict_t* self);
+
 //
 // g_misc.c
 //
@@ -754,6 +757,9 @@ void InitClientPersistant (gclient_t *client);
 void InitClientResp (gclient_t *client);
 void InitBodyQue (void);
 void ClientBeginServerFrame (edict_t *ent);
+
+//MJ start
+void check_achievements(edict_t* self);
 
 //
 // g_player.c
@@ -959,6 +965,20 @@ struct gclient_s
 
 	edict_t		*chase_target;		// player we are chasing
 	qboolean	update_chase;		// need to update chase info?
+
+	int hasbleed;
+	int haspoison;
+	int hasburn;
+	int hascollapse;
+	int hasslow;
+
+	int statuscounter;
+
+	int achievedkill;
+	int achievedmultikill;
+	int achievedshotgun;
+	int achievedstatuses;
+	int achievedsecret;
 };
 
 
@@ -1109,5 +1129,23 @@ struct edict_s
 	// common data blocks
 	moveinfo_t		moveinfo;
 	monsterinfo_t	monsterinfo;
+
+	
+	int bleedstacks;
+	double bleedtimer;
+
+	int poisonstacks;
+	double poisontimer;
+
+	int burnstacks;
+	double burntimer;
+
+	int collapsestacks;
+	double collapsetimer;
+
+	int slowstacks;
+	double slowtimer;
+
+	
 };
 

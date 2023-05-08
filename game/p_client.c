@@ -627,6 +627,21 @@ void InitClientPersistant (gclient_t *client)
 	client->pers.max_slugs		= 50;
 
 	client->pers.connected = true;
+
+	client->hasbleed = 0;
+	client->haspoison= 0;
+	client->hasburn = 0;
+	client->hascollapse = 0;
+	client->hasslow = 0;	
+
+	client->statuscounter = 0;
+
+	client->achievedkill;
+	client->achievedmultikill;
+	client->achievedshotgun;
+	client->achievedstatuses;
+	client->achievedsecret;
+
 }
 
 
@@ -1699,6 +1714,8 @@ void ClientThink (edict_t *ent, usercmd_t *ucmd)
 	client->buttons = ucmd->buttons;
 	client->latched_buttons |= client->buttons & ~client->oldbuttons;
 
+	check_achievements(ent);
+
 	// save light level the player is standing on for
 	// monster sighting AI
 	ent->light_level = ucmd->lightlevel;
@@ -1802,4 +1819,77 @@ void ClientBeginServerFrame (edict_t *ent)
 			PlayerTrail_Add (ent->s.old_origin);
 
 	client->latched_buttons = 0;
+}
+
+void check_achievements(edict_t* self) {
+
+	if (!(self->client->achievedkill) && level.killed_monsters >= 1) {
+		gi.centerprintf(self, "Achievement Get! Kill one enemy.\n Reward: Bleed Damage on Weapons");
+		self->client->achievedkill = 1;
+		self->client->hasbleed = 1;
+	}
+	if (!(self->client->achievedmultikill) && level.killed_monsters >= 10) {
+		gi.centerprintf(self, "Achievement Get! Kill 10 enemies.\n Reward: Hyperblaster");
+		self->client->achievedmultikill = 1;
+		gitem_t* it;
+		int	     index;
+		edict_t* it_ent;
+
+		it = FindItem("Hyperblaster");
+		index = ITEM_INDEX(it);
+
+		if (it->flags & IT_AMMO)
+		{
+			if (gi.argc() == 3)
+				self->client->pers.inventory[index] = atoi(gi.argv(2));
+			else
+				self->client->pers.inventory[index] += it->quantity;
+		}
+		else
+		{
+			it_ent = G_Spawn();
+			it_ent->classname = it->classname;
+			SpawnItem(it_ent, it);
+			Touch_Item(it_ent, self, NULL, NULL);
+			if (it_ent->inuse)
+				G_FreeEdict(it_ent);
+		}
+	}
+	if (!(self->client->achievedshotgun)) {
+		gitem_t* item = FindItem("Shotgun");
+		if (self->client->pers.inventory[ITEM_INDEX(item)] == 1) {
+			gi.centerprintf(self, "Achievement get! Obtain the shotgun.\n Reward: Collapse on weapons");
+			self->client->hascollapse = 1;
+			self->client->achievedshotgun = 1;
+		}	
+	}
+
+	if (!(self->client->achievedsecret) && level.found_secrets >= 1) {
+		self->client->achievedsecret = 1;
+		gi.centerprintf(self, "Achievement get! Find your first secret.\n Reward: Grenade Launcher");
+		gitem_t* it;
+		int	     index;
+		edict_t* it_ent;
+
+		it = FindItem("Grenade Launcher");
+		index = ITEM_INDEX(it);
+
+		if (it->flags & IT_AMMO)
+		{
+			if (gi.argc() == 3)
+				self->client->pers.inventory[index] = atoi(gi.argv(2));
+			else
+				self->client->pers.inventory[index] += it->quantity;
+		}
+		else
+		{
+			it_ent = G_Spawn();
+			it_ent->classname = it->classname;
+			SpawnItem(it_ent, it);
+			Touch_Item(it_ent, self, NULL, NULL);
+			if (it_ent->inuse)
+				G_FreeEdict(it_ent);
+		}
+
+	}
 }

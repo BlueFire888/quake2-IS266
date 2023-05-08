@@ -493,6 +493,43 @@ void T_Damage (edict_t *targ, edict_t *inflictor, edict_t *attacker, vec3_t dir,
 
 
 		targ->health = targ->health - take;
+		if (attacker->client) {
+			if (attacker->client->hasbleed) {
+				targ->bleedstacks += 1;
+				targ->bleedtimer = level.time + 2.0;
+				attacker->client->statuscounter++;
+			}
+			if (attacker->client->haspoison) {
+				targ->poisonstacks += 3;
+				targ->poisontimer = level.time + 0.5;
+				attacker->client->haspoison = 0;
+				attacker->client->statuscounter++;
+			}
+			if (attacker->client->hasburn) {
+				targ->burnstacks += 1;
+				targ->burntimer = level.time + 1.0;
+				if(!attacker->client->achievedstatuses)
+					attacker->client->hasburn = 0;
+				attacker->client->statuscounter++;
+			}
+			if (attacker->client->hascollapse) {
+				targ->collapsestacks += 1;
+				targ->collapsetimer = level.time + 5.0;
+				attacker->client->statuscounter++;
+			}
+			if (attacker->client->hasslow) {
+				targ->slowstacks = INT_MAX;
+				targ->slowtimer = level.time + 0.1;
+
+				//gi.centerprintf(attacker, "Bleed Damage applied");
+			}
+			if (attacker->client->statuscounter >= 3 && !attacker->client->achievedstatuses) {
+				attacker->client->achievedstatuses = 1;
+				gi.centerprintf(attacker, "Achievement get! Inflict 3 statuses in a single hit.\n Reward: Burn on weapons");
+				attacker->client->hasburn = 1;
+			}
+			attacker->client->statuscounter = 0;
+		}
 			
 		if (targ->health <= 0)
 		{

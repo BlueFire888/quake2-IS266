@@ -68,14 +68,17 @@ qboolean fire_hit (edict_t *self, vec3_t aim, int damage, int kick)
 	vec3_t		point;
 	float		range;
 	vec3_t		dir;
+	
+	gi.centerprintf(self,"aim: %s self->mins[0]: %f\n self->maxs[0]: %f", vtos(aim), self->mins[0], self->maxs[0]);
 
 	//see if enemy is in range
 	VectorSubtract (self->enemy->s.origin, self->s.origin, dir);
 	range = VectorLength(dir);
-	if (range > aim[0])
+	if (range > aim[0]) {
+		gi.centerprintf(self, "loser. range: %f", range);
 		return false;
-
-	if (aim[1] > self->mins[0] && aim[1] < self->maxs[0])
+	}
+		if (aim[1] > self->mins[0] && aim[1] < self->maxs[0])
 	{
 		// the hit is straight on so back the range up to the edge of their bbox
 		range -= self->enemy->maxs[0];
@@ -560,6 +563,14 @@ void fire_grenade2 (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int 
 	}
 }
 
+void rocket_think(edict_t* self) {
+
+	vec3_t aimdir = { 0 };
+	aimdir[0] = crandom();
+	aimdir[1] = crandom();
+	aimdir[2] = crandom();
+	fire_rail(self->owner, self->s.origin, aimdir, 100, 200);
+}
 
 /*
 =================
@@ -617,6 +628,69 @@ void rocket_touch (edict_t *ent, edict_t *other, cplane_t *plane, csurface_t *su
 	G_FreeEdict (ent);
 }
 
+
+/*
+=================
+fire_rail
+=================
+*/
+void fire_rail(edict_t* self, vec3_t start, vec3_t aimdir, int damage, int kick)
+{
+	vec3_t		from;
+	vec3_t		end;
+	trace_t		tr;
+	edict_t* ignore;
+	int			mask;
+	qboolean	water;
+
+	VectorMA(start, 8192, aimdir, end);
+	VectorCopy(start, from);
+	ignore = self;
+	water = false;
+	mask = MASK_SHOT | CONTENTS_SLIME | CONTENTS_LAVA;
+	while (ignore)
+	{
+		tr = gi.trace(from, NULL, NULL, end, ignore, mask);
+
+		if (tr.contents & (CONTENTS_SLIME | CONTENTS_LAVA))
+		{
+			mask &= ~(CONTENTS_SLIME | CONTENTS_LAVA);
+			water = true;
+		}
+		else
+		{
+			if ((tr.ent->svflags & SVF_MONSTER) || (tr.ent->client))
+				ignore = tr.ent;
+			else
+				ignore = NULL;
+
+			if ((tr.ent != self) && (tr.ent->takedamage))
+				T_Damage(tr.ent, self, self, aimdir, tr.endpos, tr.plane.normal, damage, kick, 0, MOD_RAILGUN);
+		}
+
+		VectorCopy(tr.endpos, from);
+	}
+
+	// send gun puff / flash
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_RAILTRAIL);
+	gi.WritePosition(start);
+	gi.WritePosition(tr.endpos);
+	gi.multicast(self->s.origin, MULTICAST_PHS);
+	//	gi.multicast (start, MULTICAST_PHS);
+	if (water)
+	{
+		gi.WriteByte(svc_temp_entity);
+		gi.WriteByte(TE_RAILTRAIL);
+		gi.WritePosition(start);
+		gi.WritePosition(tr.endpos);
+		gi.multicast(tr.endpos, MULTICAST_PHS);
+	}
+
+	if (self->client)
+		PlayerNoise(self, tr.endpos, PNOISE_IMPACT);
+}
+
 void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius, int radius_damage)
 {
 	edict_t	*rocket;
@@ -635,8 +709,8 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 	rocket->s.modelindex = gi.modelindex ("models/objects/rocket/tris.md2");
 	rocket->owner = self;
 	rocket->touch = rocket_touch;
-	rocket->nextthink = level.time + 8000/speed;
-	rocket->think = G_FreeEdict;
+	rocket->nextthink = level.time + 2;
+	rocket->think = rocket_think;
 	rocket->dmg = damage;
 	rocket->radius_dmg = radius_damage;
 	rocket->dmg_radius = damage_radius;
@@ -647,70 +721,9 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 		check_dodge (self, rocket->s.origin, dir, speed);
 
 	gi.linkentity (rocket);
+	rocket_think(rocket);
 }
 
-
-/*
-=================
-fire_rail
-=================
-*/
-void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick)
-{
-	vec3_t		from;
-	vec3_t		end;
-	trace_t		tr;
-	edict_t		*ignore;
-	int			mask;
-	qboolean	water;
-
-	VectorMA (start, 8192, aimdir, end);
-	VectorCopy (start, from);
-	ignore = self;
-	water = false;
-	mask = MASK_SHOT|CONTENTS_SLIME|CONTENTS_LAVA;
-	while (ignore)
-	{
-		tr = gi.trace (from, NULL, NULL, end, ignore, mask);
-
-		if (tr.contents & (CONTENTS_SLIME|CONTENTS_LAVA))
-		{
-			mask &= ~(CONTENTS_SLIME|CONTENTS_LAVA);
-			water = true;
-		}
-		else
-		{
-			if ((tr.ent->svflags & SVF_MONSTER) || (tr.ent->client))
-				ignore = tr.ent;
-			else
-				ignore = NULL;
-
-			if ((tr.ent != self) && (tr.ent->takedamage))
-				T_Damage (tr.ent, self, self, aimdir, tr.endpos, tr.plane.normal, damage, kick, 0, MOD_RAILGUN);
-		}
-
-		VectorCopy (tr.endpos, from);
-	}
-
-	// send gun puff / flash
-	gi.WriteByte (svc_temp_entity);
-	gi.WriteByte (TE_RAILTRAIL);
-	gi.WritePosition (start);
-	gi.WritePosition (tr.endpos);
-	gi.multicast (self->s.origin, MULTICAST_PHS);
-//	gi.multicast (start, MULTICAST_PHS);
-	if (water)
-	{
-		gi.WriteByte (svc_temp_entity);
-		gi.WriteByte (TE_RAILTRAIL);
-		gi.WritePosition (start);
-		gi.WritePosition (tr.endpos);
-		gi.multicast (tr.endpos, MULTICAST_PHS);
-	}
-
-	if (self->client)
-		PlayerNoise(self, tr.endpos, PNOISE_IMPACT);
-}
 
 
 /*
